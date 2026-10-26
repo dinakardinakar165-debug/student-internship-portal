@@ -13,6 +13,53 @@ import {
   createApplication
 } from './api.js';
 
+const DEMO_INTERNSHIPS = [
+  {
+    id: 'cloud-devops',
+    title: 'Cloud & DevOps Intern',
+    company: 'Skyward Systems',
+    category: 'Cloud',
+    location: 'Remote',
+    duration: '8 weeks',
+    stipend: '₹8,000/month',
+    description: 'Learn AWS, Docker, Linux and CI/CD pipelines.',
+    skills: ['AWS', 'Docker', 'Linux', 'Git']
+  },
+  {
+    id: 'frontend-react',
+    title: 'Frontend Developer Intern',
+    company: 'PixelForge Studio',
+    category: 'Development',
+    location: 'Coimbatore / Hybrid',
+    duration: '10 weeks',
+    stipend: '₹10,000/month',
+    description: 'Build responsive interfaces with React.',
+    skills: ['HTML', 'CSS', 'JavaScript', 'React']
+  },
+  {
+    id: 'data-analytics',
+    title: 'Data Analytics Intern',
+    company: 'InsightLoop',
+    category: 'Data',
+    location: 'Remote',
+    duration: '6 weeks',
+    stipend: '₹7,000/month',
+    description: 'Analyze data and create useful reports.',
+    skills: ['SQL', 'Python', 'Excel', 'Charts']
+  },
+  {
+    id: 'cybersecurity',
+    title: 'Cybersecurity Intern',
+    company: 'SecureNest Labs',
+    category: 'Security',
+    location: 'Chennai / Hybrid',
+    duration: '8 weeks',
+    stipend: '₹9,000/month',
+    description: 'Learn defensive security and monitoring.',
+    skills: ['Networking', 'Linux', 'Security']
+  }
+];
+
 function Navbar() {
   return (
     <nav className="navbar">
@@ -39,12 +86,18 @@ function Home() {
   const [internships, setInternships] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-  const [error, setError] = useState('');
+  const [usingDemoData, setUsingDemoData] = useState(false);
 
   useEffect(() => {
     fetchInternships()
-      .then(data => setInternships(data.internships || []))
-      .catch(err => setError(err.message));
+      .then(data => {
+        setInternships(data.internships || []);
+        setUsingDemoData(false);
+      })
+      .catch(() => {
+        setInternships(DEMO_INTERNSHIPS);
+        setUsingDemoData(true);
+      });
   }, []);
 
   const categories = [
@@ -127,7 +180,12 @@ function Home() {
           ))}
         </div>
 
-        {error && <p className="error-message">{error}</p>}
+        {usingDemoData && (
+          <p className="demo-notice" role="status">
+            Demo listings are shown because the internship service is offline.
+            Applications require the live backend.
+          </p>
+        )}
 
         <div className="job-grid">
           {filtered.map(item => (
@@ -140,6 +198,7 @@ function Home() {
                     : item.category === 'Security' ? '🛡️' : '✳️'}
                 </span>
                 <span className="tag">{item.category}</span>
+                {usingDemoData && <span className="demo-tag">DEMO</span>}
               </div>
 
               <small className="company">{item.company}</small>
@@ -168,7 +227,7 @@ function Home() {
           ))}
         </div>
 
-        {!filtered.length && !error && (
+        {!filtered.length && (
           <div className="empty">
             <h3>No internships found</h3>
             <p>Try another search or category.</p>
@@ -196,11 +255,23 @@ function InternshipDetails() {
   const { id } = useParams();
   const [internship, setInternship] = useState(null);
   const [error, setError] = useState('');
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     fetchInternship(id)
-      .then(data => setInternship(data.internship))
-      .catch(err => setError(err.message));
+      .then(data => {
+        setInternship(data.internship);
+        setIsDemo(false);
+      })
+      .catch(err => {
+        const demo = DEMO_INTERNSHIPS.find(item => item.id === id);
+        if (demo) {
+          setInternship(demo);
+          setIsDemo(true);
+        } else {
+          setError(err.message);
+        }
+      });
   }, [id]);
 
   if (error) {
@@ -220,6 +291,11 @@ function InternshipDetails() {
   return (
     <main className="page-content">
       <Link to="/" className="back-link">← All internships</Link>
+      {isDemo && (
+        <p className="demo-notice" role="status">
+          Demo internship details. Applications require the live backend.
+        </p>
+      )}
       <section className="details-card">
         <span className="tag">{internship.category}</span>
         <h1>{internship.title}</h1>
@@ -251,6 +327,7 @@ function Apply() {
   const navigate = useNavigate();
 
   const [internships, setInternships] = useState([]);
+  const [usingDemoData, setUsingDemoData] = useState(false);
   const [form, setForm] = useState({
     studentName: '',
     email: '',
@@ -265,7 +342,10 @@ function Apply() {
   useEffect(() => {
     fetchInternships()
       .then(data => setInternships(data.internships || []))
-      .catch(err => setMessage(err.message));
+      .catch(() => {
+        setInternships(DEMO_INTERNSHIPS);
+        setUsingDemoData(true);
+      });
   }, []);
 
   useEffect(() => {
@@ -328,7 +408,7 @@ function Apply() {
       });
     } catch (err) {
       setSuccess(false);
-      setMessage(err.message);
+      setMessage(`Application was not submitted: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -349,6 +429,13 @@ function Apply() {
       <form className="application-form" onSubmit={handleSubmit} noValidate>
         <h2>Student application</h2>
         <p>All fields are required.</p>
+
+        {usingDemoData && (
+          <p className="demo-notice" role="status">
+            Demo internship choices are shown. The backend is unavailable, so
+            application submission cannot be completed right now.
+          </p>
+        )}
 
         {message && (
           <div className={success ? 'success-message' : 'error-message'}

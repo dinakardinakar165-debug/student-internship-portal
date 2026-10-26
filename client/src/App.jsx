@@ -19,7 +19,7 @@ function Navbar() {
       <Link to="/" className="brand">Launchpad<span>.</span></Link>
       <div>
         <Link to="/">Internships</Link>
-        <a href="/#how-it-works">How it works</a>
+        <Link to="/#how-it-works">How it works</Link>
       </div>
       <Link className="nav-button" to="/">Explore roles ↗</Link>
     </nav>
@@ -179,7 +179,7 @@ function Home() {
       <section className="how" id="how-it-works">
         <div>
           <span className="eyebrow">YOUR JOURNEY</span>
-          <h2>Your future doesn't have to wait.</h2>
+          <h2>Your future doesn&apos;t have to wait.</h2>
           <p>Three simple steps to start building experience.</p>
         </div>
         <div className="steps">
@@ -231,7 +231,7 @@ function InternshipDetails() {
           <span>Stipend: <b>{internship.stipend}</b></span>
         </div>
 
-        <h3>Skills you'll use</h3>
+        <h3>Skills you&apos;ll use</h3>
         <div className="skills">
           {internship.skills.map(skill => (
             <span key={skill}>{skill}</span>

@@ -2,7 +2,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  base: '/student-internship-portal/',
+  // GitHub Pages serves this repository from a subpath; other hosts serve at /.
+  base: globalThis.process?.env?.GITHUB_PAGES === 'true'
+    ? '/student-internship-portal/'
+    : '/',
   plugins: [react()],
   server: {
     host: '0.0.0.0',

@@ -35,9 +35,18 @@ jobs:
 
       - name: Build frontend
         working-directory: client
-        run: npm run build
+        run: |
+          if [ -z "$VITE_API_URL" ]; then
+            echo "Repository variable VITE_API_URL must contain the verified production API base URL (ending in /api)."
+            exit 1
+          fi
+          npm run build
         env:
-          VITE_API_URL: https://student-internship-portal-basq.onrender.com/api
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          GITHUB_PAGES: 'true'
+
+      - name: Add GitHub Pages SPA fallback
+        run: cp client/dist/index.html client/dist/404.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

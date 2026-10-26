@@ -1,44 +1,39 @@
-# MERN
+# Student Internship Portal
 
-This is a simple NodeJS + Express + React + MongoDB application. This application serves as a basic template for a mern applications.
+A full-stack MERN application for browsing internship opportunities, viewing role details, and submitting student applications. The frontend uses React, Vite, and React Router; the REST API uses Node.js, Express, and Mongoose.
 
-What does this application do?
--------------------------------
-This application serves a simple MERN based TODO application to demonstrate the use of MERN stack. This application uses following technologies:
-- MongoDB: used as database
-- Express: used as web application framework
-- React: used as frontend framework to build UI
-- NodeJS: used as backend server
+## Run locally
 
+1. Install Node.js 20 or newer and have a MongoDB instance available.
+2. Copy `.env.example` to `.env` and set `MONGO_DB_URI` to your own MongoDB connection string. Keep `.env` private.
+3. Install dependencies with `npm run setup`.
+4. Start the API and frontend with `npm run dev`.
+5. Open `http://localhost:5173`.
 
-## How to run
+The Vite development server proxies `/api` requests to `http://127.0.0.1:5000`. The API listens on `PORT` (5000 by default) and binds to `0.0.0.0`.
 
-Before running the application, make sure all dependencies are installed. 
+## API
 
-1. Install server & client dependencies, run following command in terminal:
-   > `npm install; cd client && npm install && cd ..`
+- `GET /api/health` — health response (available after the API connects to MongoDB).
+- `GET /api/internships` — list internships; accepts optional `search` and `category` query parameters.
+- `GET /api/internships/:id` — internship details.
+- `POST /api/applications` — create an application. Required JSON fields: `studentName`, `email`, `rollNumber`, and `internshipId`.
 
-2. Run following command to start both server and client:
-   > `npm run dev`
+The internship catalogue is seeded in the API route source. Applications are validated and stored in MongoDB.
 
-3. Refresh the URL in simple browser to see the output.
+## GitHub Pages deployment
 
+GitHub Pages hosts the Vite frontend only; it does not run Express or MongoDB. The `Deploy Student Internship Portal` workflow builds the frontend for `/student-internship-portal/`, publishes `client/dist`, and includes a `404.html` SPA fallback for refreshed nested routes. It runs for pushes to `rollno_v1` and `main`, and can also be started manually.
 
+Before the workflow can build a production frontend, add a GitHub repository variable named `VITE_API_URL` with the verified public API base URL, ending in `/api` (for example, `https://your-service.example/api`). The deployed API must allow browser requests from `https://dinakardinakar165-debug.github.io`.
 
-## FAQs & Debugging
+## Docker
 
-### 1. Node server failing to connect to Database
+Build from the repository root and provide `MONGO_DB_URI` and (optionally) `PORT` through the container environment. The image builds and serves the frontend from Express in production mode.
 
-   Ensure Mongo_DB_URI is set in .env file. If not, create a new file named `.env` in root directory and add following line:
-   > `MONGO_DB_URI=<YOUR_MONGO_DB_URI>`
+```sh
+docker build -t student-internship-portal .
+docker run --rm -p 5000:5000 -e PORT=5000 -e MONGO_DB_URI='mongodb://host.docker.internal:27017/student-internship-portal' student-internship-portal
+```
 
-   Once the studio is connected to your workspace, `MONGO_DB_URI` should be automatically set in your `.env` file.
-
-   Alternatively, you can create `MONGO_DB_URI` using value present in the file **.vscode/.studio/studio-env.json**.
-   MONGO_DB_URI typically looks like this:
-> `mongodb://<USERNAME>:<PASSWORD>@<HOST>:<PORT>/<DATABASE_NAME>`
-
-### 2. Can I start server and client separately?   
-   `npm run dev` starts both server and client. If you want to start them separately, you can use following commands:
-   - `npm run server`: to start server
-   - `npm run client`: to start client
+Never commit `.env` files or put credentials in `VITE_*` variables; Vite embeds those values in public browser assets.

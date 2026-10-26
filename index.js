@@ -40,7 +40,11 @@ app.use((req, res) => {
 async function startServer() {
   try {
     if (!process.env.MONGO_DB_URI) {
-      throw new Error('MONGO_DB_URI is missing in .env');
+      throw new Error('MONGO_DB_URI is missing');
+    }
+
+    if (!/^mongodb(?:\+srv)?:\/\//i.test(process.env.MONGO_DB_URI)) {
+      throw new Error('MONGO_DB_URI must use mongodb:// or mongodb+srv://');
     }
 
     await mongoose.connect(process.env.MONGO_DB_URI);

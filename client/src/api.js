@@ -16,14 +16,19 @@ async function request(path, options = {}) {
     });
   } catch {
     throw new Error(
-      'Cannot connect to the backend. Check that the server is running.'
+      'The backend is unreachable. Your application was not submitted.'
     );
   }
 
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || 'Request failed.');
+    const message = data.message || (
+      response.status === 404
+        ? 'The backend API returned 404. GitHub Pages hosts only the frontend, so an API service is required.'
+        : `The backend returned HTTP ${response.status}.`
+    );
+    throw new Error(message);
   }
 
   return data;

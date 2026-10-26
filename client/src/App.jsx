@@ -376,7 +376,6 @@ function Apply() {
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
-  const [savedLocally, setSavedLocally] = useState(false);
   const [loading, setLoading] = useState(false);
   const submissionInProgress = useRef(false);
 
@@ -406,7 +405,6 @@ function Apply() {
     }));
     setMessage('');
     setSuccess(false);
-    setSavedLocally(false);
   }
 
   function validate() {
@@ -438,7 +436,6 @@ function Apply() {
 
     setMessage('');
     setSuccess(false);
-    setSavedLocally(false);
 
     if (!validate()) return;
 
@@ -464,7 +461,6 @@ function Apply() {
           item => item.id === form.internshipId
         );
         saveApplicationLocally(form, internship);
-        setSavedLocally(true);
         setMessage('Application saved successfully.');
       } else {
         setMessage(result.message || 'Application submitted successfully!');
@@ -479,7 +475,6 @@ function Apply() {
       });
     } catch (err) {
       setSuccess(false);
-      setSavedLocally(false);
       if (err.code === 'LOCAL_STORAGE_ERROR') {
         setMessage(
           'Could not save the application in this browser. Check local storage and try again.'
@@ -520,12 +515,6 @@ function Apply() {
           <div className={success ? 'success-message' : 'error-message'} role="status">
             {message}
           </div>
-        )}
-
-        {savedLocally && (
-          <p className="local-save-note">
-            Saved in this browser only. It was not sent to or saved in MongoDB.
-          </p>
         )}
 
         <div className="form-field">

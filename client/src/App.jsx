@@ -294,19 +294,16 @@ function InternshipDetails() {
   const { id } = useParams();
   const [internship, setInternship] = useState(null);
   const [error, setError] = useState('');
-  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     fetchInternship(id)
       .then(data => {
         setInternship(data.internship);
-        setIsDemo(false);
       })
       .catch(err => {
         const demo = DEMO_INTERNSHIPS.find(item => item.id === id);
         if (demo) {
           setInternship(demo);
-          setIsDemo(true);
         } else {
           setError(err.message);
         }
@@ -330,11 +327,6 @@ function InternshipDetails() {
   return (
     <main className="page-content">
       <Link to="/" className="back-link">← All internships</Link>
-      {isDemo && (
-        <p className="demo-notice" role="status">
-          Demo internship details. Applications require the live backend.
-        </p>
-      )}
       <section className="details-card">
         <span className="tag">{internship.category}</span>
         <h1>{internship.title}</h1>

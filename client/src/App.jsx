@@ -504,13 +504,6 @@ function Apply() {
         <h2>Student application</h2>
         <p>All fields are required.</p>
 
-        {usingDemoData && (
-          <p className="demo-notice" role="status">
-            Demo internship choices are shown. A demo confirmation will not
-            be saved to MongoDB; it will be kept only in this browser.
-          </p>
-        )}
-
         {message && (
           <div className={success ? 'success-message' : 'error-message'} role="status">
             {message}

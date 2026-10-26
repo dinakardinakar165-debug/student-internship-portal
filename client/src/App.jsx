@@ -337,6 +337,7 @@ function Apply() {
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
+  const [demoSuccess, setDemoSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -364,6 +365,7 @@ function Apply() {
       [event.target.name]: ''
     }));
     setMessage('');
+    setDemoSuccess(false);
   }
 
   function validate() {
@@ -392,13 +394,24 @@ function Apply() {
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage('');
+    setDemoSuccess(false);
 
     if (!validate()) return;
+
+    if (usingDemoData) {
+      setSuccess(false);
+      setDemoSuccess(true);
+      setMessage(
+        'Demo application submitted successfully. It was not saved because the backend is unavailable.'
+      );
+      return;
+    }
 
     setLoading(true);
     try {
       const result = await createApplication(form);
       setSuccess(true);
+      setDemoSuccess(false);
       setMessage(result.message || 'Application submitted successfully!');
       setForm({
         studentName: '',
@@ -432,13 +445,13 @@ function Apply() {
 
         {usingDemoData && (
           <p className="demo-notice" role="status">
-            Demo internship choices are shown. The backend is unavailable, so
-            application submission cannot be completed right now.
+            Demo internship choices are shown. A demo confirmation will not
+            save an application because the backend is unavailable.
           </p>
         )}
 
         {message && (
-          <div className={success ? 'success-message' : 'error-message'}
+          <div className={success || demoSuccess ? 'success-message' : 'error-message'}
                role="status">
             {message}
           </div>
@@ -503,7 +516,7 @@ function Apply() {
           {loading ? 'Submitting...' : 'Submit application →'}
         </button>
 
-        {success && (
+        {(success || demoSuccess) && (
           <button
             type="button"
             className="secondary-button"

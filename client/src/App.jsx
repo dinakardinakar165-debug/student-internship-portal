@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Link,
   Routes,
@@ -59,6 +59,45 @@ const DEMO_INTERNSHIPS = [
     skills: ['Networking', 'Linux', 'Security']
   }
 ];
+
+const APPLICATIONS_STORAGE_KEY = 'studentInternshipApplications';
+
+function isBackendUnavailable(error) {
+  return error?.code === 'NETWORK_ERROR'
+    || error?.status === 404
+    || error?.status >= 500;
+}
+
+function saveApplicationLocally(application, internship) {
+  try {
+    const existing = window.localStorage.getItem(APPLICATIONS_STORAGE_KEY);
+    const applications = existing ? JSON.parse(existing) : [];
+
+    if (!Array.isArray(applications)) {
+      throw new Error('Saved application data is not in the expected format.');
+    }
+
+    applications.push({
+      studentName: application.studentName.trim(),
+      email: application.email.trim().toLowerCase(),
+      rollNumber: application.rollNumber.trim().toUpperCase(),
+      internshipId: application.internshipId,
+      internshipTitle: internship?.title || '',
+      company: internship?.company || '',
+      savedAt: new Date().toISOString(),
+      storage: 'browser-local'
+    });
+
+    window.localStorage.setItem(
+      APPLICATIONS_STORAGE_KEY,
+      JSON.stringify(applications)
+    );
+  } catch {
+    const error = new Error('Unable to save this application in browser storage.');
+    error.code = 'LOCAL_STORAGE_ERROR';
+    throw error;
+  }
+}
 
 function Navbar() {
   return (
@@ -337,8 +376,9 @@ function Apply() {
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
-  const [demoSuccess, setDemoSuccess] = useState(false);
+  const [savedLocally, setSavedLocally] = useState(false);
   const [loading, setLoading] = useState(false);
+  const submissionInProgress = useRef(false);
 
   useEffect(() => {
     fetchInternships()
@@ -365,7 +405,8 @@ function Apply() {
       [event.target.name]: ''
     }));
     setMessage('');
-    setDemoSuccess(false);
+    setSuccess(false);
+    setSavedLocally(false);
   }
 
   function validate() {
@@ -393,26 +434,43 @@ function Apply() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (submissionInProgress.current) return;
+
     setMessage('');
-    setDemoSuccess(false);
+    setSuccess(false);
+    setSavedLocally(false);
 
     if (!validate()) return;
 
-    if (usingDemoData) {
-      setSuccess(false);
-      setDemoSuccess(true);
-      setMessage(
-        'Demo application submitted successfully. It was not saved because the backend is unavailable.'
-      );
-      return;
-    }
-
+    submissionInProgress.current = true;
     setLoading(true);
     try {
-      const result = await createApplication(form);
+      let result;
+      let saveToBrowser = usingDemoData;
+
+      if (!saveToBrowser) {
+        try {
+          result = await createApplication(form);
+        } catch (error) {
+          if (!isBackendUnavailable(error)) throw error;
+          saveToBrowser = true;
+        }
+      }
+
+      if (saveToBrowser) {
+        const internship = internships.find(
+          item => item.id === form.internshipId
+        ) || DEMO_INTERNSHIPS.find(
+          item => item.id === form.internshipId
+        );
+        saveApplicationLocally(form, internship);
+        setSavedLocally(true);
+        setMessage('Application saved successfully.');
+      } else {
+        setMessage(result.message || 'Application submitted successfully!');
+      }
+
       setSuccess(true);
-      setDemoSuccess(false);
-      setMessage(result.message || 'Application submitted successfully!');
       setForm({
         studentName: '',
         email: '',
@@ -421,8 +479,16 @@ function Apply() {
       });
     } catch (err) {
       setSuccess(false);
-      setMessage(`Application was not submitted: ${err.message}`);
+      setSavedLocally(false);
+      if (err.code === 'LOCAL_STORAGE_ERROR') {
+        setMessage(
+          'Could not save the application in this browser. Check local storage and try again.'
+        );
+      } else {
+        setMessage(`Application was not submitted: ${err.message}`);
+      }
     } finally {
+      submissionInProgress.current = false;
       setLoading(false);
     }
   }
@@ -446,15 +512,20 @@ function Apply() {
         {usingDemoData && (
           <p className="demo-notice" role="status">
             Demo internship choices are shown. A demo confirmation will not
-            save an application because the backend is unavailable.
+            be saved to MongoDB; it will be kept only in this browser.
           </p>
         )}
 
         {message && (
-          <div className={success || demoSuccess ? 'success-message' : 'error-message'}
-               role="status">
+          <div className={success ? 'success-message' : 'error-message'} role="status">
             {message}
           </div>
+        )}
+
+        {savedLocally && (
+          <p className="local-save-note">
+            Saved in this browser only. It was not sent to or saved in MongoDB.
+          </p>
         )}
 
         <div className="form-field">
@@ -516,7 +587,7 @@ function Apply() {
           {loading ? 'Submitting...' : 'Submit application →'}
         </button>
 
-        {(success || demoSuccess) && (
+        {success && (
           <button
             type="button"
             className="secondary-button"

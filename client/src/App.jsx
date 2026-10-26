@@ -125,17 +125,14 @@ function Home() {
   const [internships, setInternships] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-  const [usingDemoData, setUsingDemoData] = useState(false);
 
   useEffect(() => {
     fetchInternships()
       .then(data => {
         setInternships(data.internships || []);
-        setUsingDemoData(false);
       })
       .catch(() => {
         setInternships(DEMO_INTERNSHIPS);
-        setUsingDemoData(true);
       });
   }, []);
 
@@ -219,13 +216,6 @@ function Home() {
           ))}
         </div>
 
-        {usingDemoData && (
-          <p className="demo-notice" role="status">
-            Demo listings are shown because the internship service is offline.
-            Applications require the live backend.
-          </p>
-        )}
-
         <div className="job-grid">
           {filtered.map(item => (
             <article className="job-card" key={item.id}>
@@ -237,7 +227,6 @@ function Home() {
                     : item.category === 'Security' ? '🛡️' : '✳️'}
                 </span>
                 <span className="tag">{item.category}</span>
-                {usingDemoData && <span className="demo-tag">DEMO</span>}
               </div>
 
               <small className="company">{item.company}</small>

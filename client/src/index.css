@@ -350,8 +350,6 @@ button { cursor: pointer; }
 }
 .success-message { background: #eaf7ee; color: #286b47; }
 .error-message { background: #fff0ef; color: #a23e3e; }
-.demo-notice { border-radius: 8px; padding: 12px; margin: 15px 0; background: #fff7e8; color: #805622; font-size: 11px; line-height: 1.6; }
-.demo-tag { background: #fff1d7; color: #805622; padding: 7px 9px; border-radius: 5px; font-size: 8px; font-weight: 800; letter-spacing: .4px; }
 .secondary-button { display: block; border: 0; background: none; color: #536b85; font-size: 11px; margin: 15px auto 0; }
 .empty { text-align: center; padding: 50px 15px; }
 .empty p { color: var(--muted); font-size: 12px; }
